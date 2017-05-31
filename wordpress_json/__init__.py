@@ -250,6 +250,11 @@ class WordpressJsonWrapper(object):
         if kw.get('headers'):
             headers = kw.get('headers')
 
+        # files
+        files = dict()
+        if kw.get('files'):
+            files = kw.get('files')
+
         if 'application/json' not in headers.get('Content-Type',
                                                  'application/json'):
             post_json = None
@@ -258,10 +263,10 @@ class WordpressJsonWrapper(object):
             post_data = None
 
         return (method.upper(), endpoint, url_params, post_data, post_json,
-                headers)
+                headers, files)
 
     def _request(self, method_name, **kw):
-        method, endpoint, params, data, json, headers = self._prepare_req(
+        method, endpoint, params, data, json, headers, files = self._prepare_req(
             method_name, **kw
         )
 
@@ -272,7 +277,8 @@ class WordpressJsonWrapper(object):
             params=params,
             data=data,
             json=json,
-            headers=headers
+            headers=headers,
+            files=files
         )
 
         if http_response.status_code not in [200, 201]:
