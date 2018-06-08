@@ -16,7 +16,7 @@ Wordpress JSON API (WP-API).
 import requests
 import six
 
-__version__ = '0.2.4',
+__version__ = '0.2.5',
 __author__ = 'Raul Taranu, Dimitar Roustchev'
 
 methods = {
@@ -282,7 +282,8 @@ class WordpressJsonWrapper(object):
         )
 
         if http_response.status_code not in [200, 201]:
-            if 'application/json' in http_response.headers.get('Content-Type'):
+            if 'application/json' in http_response.headers.get('Content-Type') and \
+                    int(http_response.headers.get('Content-Length')) > 0:
                 code = http_response.json().get('code')
                 message = http_response.json().get('message')
             else:
@@ -297,9 +298,14 @@ class WordpressJsonWrapper(object):
         elif 'application/json' in http_response.headers.get('Content-Type'):
             return http_response.json()
         else:
-            raise WordpressError(" ".join([
-                "Expected JSON response but got",
-                http_response.headers.get('Content-Type')]))
+            # If not JSON specified in 'Content-Type' it still may be JSON in response BODY so we try to decode it
+            # and we check for errors and keep custom WordPress error in 'except' statement.
+            try:
+                return http_response.json()
+            except:
+                raise WordpressError(" ".join([
+                    "Expected JSON response but got",
+                    http_response.headers.get('Content-Type')]))
 
 
 if __name__ == '__main__':
