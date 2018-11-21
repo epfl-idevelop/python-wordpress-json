@@ -16,7 +16,7 @@ Wordpress JSON API (WP-API).
 import requests
 import six
 
-__version__ = '0.2.5',
+__version__ = '0.2.6',
 __author__ = 'Raul Taranu, Dimitar Roustchev'
 
 methods = {
@@ -282,6 +282,12 @@ class WordpressJsonWrapper(object):
         )
 
         if http_response.status_code not in [200, 201]:
+            # If 'access denied', 'Content-Type' header is not returned so next 'if' will trigger an exception.
+            # It's better if we catch the 403 error and raise custom exception
+            if http_response.status_code == 403:
+                raise WordpressError("Access denied to {}. Returned error:\n{}".format(self.site + endpoint,
+                                                                                       http_response.content))
+
             if 'application/json' in http_response.headers.get('Content-Type') and \
                     int(http_response.headers.get('Content-Length')) > 0:
                 code = http_response.json().get('code')
